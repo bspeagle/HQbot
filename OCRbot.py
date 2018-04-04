@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from PIL import Image
 import pyscreenshot
 import pytesseract
-import urllib2
+import urllib.request
+import urllib.parse
+import urllib.error
 import threading
 
 answers = pyscreenshot.grab(bbox=(554, 400, 400, 187))
 answers.save('answers.png')
 aText = pytesseract.image_to_string(Image.open('answers.png'))
-aSText = aText.split('\n')
+aSText = aText.split(u'\n')
 
 question = pyscreenshot.grab(bbox=(552, 240, 325, 150))
 question.save('question.png')
@@ -21,11 +23,11 @@ qTextCleaned = qTextCleaned.replace(u'“','')
 qTextCleaned = qTextCleaned.replace(u'”','')
 qTextCleaned = qTextCleaned.replace('"','')
 
-qTextCleaned = urllib2.quote(qTextCleaned, safe='')
+qTextCleaned = urllib.parse.quote(qTextCleaned, safe='')
 
 url = "https://www.ask.com/web?q=" + qTextCleaned
-page = urllib2.urlopen(url)
-soup = BeautifulSoup(page.read())
+page = urllib.request.urlopen(url)
+soup = BeautifulSoup(page.read(), "html.parser")
 links = soup.findAll("a", href=True)
 
 aCount1 = 0
@@ -39,16 +41,16 @@ def scanURL(link):
 
 	if link["href"].startswith('https://'):
 		try:
-			result = urllib2.urlopen(link["href"])
+			result = urllib.request.urlopen(link["href"])
 			pageStuff = result.read()
 		
-			aCount = pageStuff.count(str(aSText[0]))
+			aCount = pageStuff.count(aSText[0].encode())
 			aCount1 += aCount
-			aCount = pageStuff.count(str(aSText[2]))
+			aCount = pageStuff.count(aSText[2].encode())
 			aCount2 += aCount
-			aCount = pageStuff.count(str(aSText[4]))
+			aCount = pageStuff.count(aSText[4].encode())
 			aCount3 += aCount
-		except urllib2.HTTPError as err:
+		except urllib.error.HTTPError as err:
 			print(err)
 
 for link in links:
